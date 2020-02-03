@@ -1,4 +1,3 @@
-
 import json
 import unittest
 
@@ -270,4 +269,4 @@ class SeverityTestCase(unittest.TestCase):
                 process_alert(Alert(resource='foo', event='bar',
                                     environment='Development', service=['Svc'], severity='baz'))
             exc = e.exception
-            self.assertEqual(str(exc)[:64], 'Severity is not one of security, critical, major, minor, warning')
+            self.assertEqual(str(exc)[:70], 'Severity (baz) is not one of security, critical, major, minor, warning')

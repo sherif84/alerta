@@ -1,4 +1,3 @@
-
 from flask import current_app
 from werkzeug.datastructures import MultiDict
 
@@ -7,7 +6,7 @@ from alerta.exceptions import ApiError
 
 class Page:
 
-    def __init__(self, page: int=1, page_size: int=None, items: int=0) -> None:
+    def __init__(self, page: int = 1, page_size: int = None, items: int = 0) -> None:
 
         self.page = page
         self.page_size = page_size or current_app.config['DEFAULT_PAGE_SIZE']

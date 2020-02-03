@@ -1,4 +1,3 @@
-
 import json
 import unittest
 
@@ -25,7 +24,7 @@ class LoggingTestCase(unittest.TestCase):
     def test_custom_webhook(self):
 
         # setup custom webhook
-        custom_webhooks.webhooks['json'] = TestJsonWebhook()
+        custom_webhooks.webhooks['json'] = DummyJsonWebhook()
 
         payload = """
             {"baz": "quux %X %%"}
@@ -39,7 +38,7 @@ class LoggingTestCase(unittest.TestCase):
         self.assertEqual(data['alert']['event'], 'quux %X %%')
 
 
-class TestJsonWebhook(WebhookBase):
+class DummyJsonWebhook(WebhookBase):
 
     def incoming(self, query_string, payload):
         return Alert(

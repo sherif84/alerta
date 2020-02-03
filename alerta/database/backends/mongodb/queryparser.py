@@ -1,4 +1,3 @@
-
 from pyparsing import (CaselessKeyword, Forward, Group, Literal, Optional,
                        ParseException, ParserElement, QuotedString, Regex,
                        Suppress, Word, infixNotation, opAssoc, printables)
@@ -138,7 +137,7 @@ clause = Forward()
 field_name = valid_word()('fieldname')
 single_term = valid_word()('singleterm')
 phrase = QuotedString('"', unquoteResults=True)('phrase')
-wildcard = Regex('[a-z0-9]*[\?\*][a-z0-9]*')('wildcard')
+wildcard = Regex(r'[a-z0-9]*[\?\*][a-z0-9]*')('wildcard')
 wildcard.setParseAction(
     lambda t: t[0].replace('?', '.?').replace('*', '.*')
 )
@@ -162,8 +161,8 @@ one_sided_range = Group(mongo_op('op') + valid_word('bound'))('onesidedrange')
 
 term = (_range | one_sided_range | regex | wildcard | phrase | single_term)
 
-clause << (Optional(field_name + COLON, default='__default_field__')('field') +
-           (term('term') | Group(LPAR + query_expr + RPAR)('subquery')))
+clause << (Optional(field_name + COLON, default='__default_field__')('field')
+           + (term('term') | Group(LPAR + query_expr + RPAR)('subquery')))
 
 clause.addParseAction(SearchTerm)
 

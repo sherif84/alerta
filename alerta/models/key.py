@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
@@ -14,7 +13,7 @@ JSON = Dict[str, Any]
 
 class ApiKey:
 
-    def __init__(self, user: str, scopes: List[Scope], text: str='', expire_time: datetime=None, customer: str=None, **kwargs) -> None:
+    def __init__(self, user: str, scopes: List[Scope], text: str = '', expire_time: datetime = None, customer: str = None, **kwargs) -> None:
 
         self.id = kwargs.get('id', None) or str(uuid4())
         self.key = kwargs.get('key', None) or key_helper.generate()
@@ -73,7 +72,7 @@ class ApiKey:
             id=doc.get('id', None) or doc.get('_id'),
             key=doc.get('key', None) or doc.get('_id'),
             user=doc.get('user', None),
-            scopes=[Scope(s) for s in doc.get('scopes', None)] or key_helper.type_to_scopes(
+            scopes=[Scope(s) for s in doc.get('scopes', list())] or key_helper.type_to_scopes(
                 doc.get('user', None), doc.get('type', None)) or list(),
             text=doc.get('text', None),
             expire_time=doc.get('expireTime', None),
@@ -110,14 +109,14 @@ class ApiKey:
         return ApiKey.from_db(db.create_key(self))
 
     @staticmethod
-    def find_by_id(key: str, user: str=None) -> Optional['ApiKey']:
+    def find_by_id(key: str, user: str = None) -> Optional['ApiKey']:
         """
         Get API key details.
         """
         return ApiKey.from_db(db.get_key(key, user))
 
     @staticmethod
-    def find_all(query: Query=None) -> List['ApiKey']:
+    def find_all(query: Query = None) -> List['ApiKey']:
         """
         List all API keys.
         """

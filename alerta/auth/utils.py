@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, Dict, List, cast
+from typing import TYPE_CHECKING, Any, List, cast
 from urllib.parse import urljoin
 from uuid import uuid4
 
 from flask import current_app, request
 from itsdangerous import BadData, SignatureExpired, URLSafeTimedSerializer
-from six import text_type
 
 from alerta.app import mailer
 from alerta.exceptions import ApiError, NoCustomerMatch
@@ -20,7 +19,7 @@ try:
     import bcrypt  # type: ignore
 
     def generate_password_hash(password: Any) -> str:
-        if isinstance(password, text_type):
+        if isinstance(password, str):
             password = password.encode('utf-8')
         return bcrypt.hashpw(password, bcrypt.gensalt(prefix=b'2a')).decode('utf-8')
 
@@ -32,9 +31,9 @@ except ImportError:  # Google App Engine
 
 
 def not_authorized(allowed_setting: str, groups: List[str]) -> bool:
-    return (current_app.config['AUTH_REQUIRED'] and
-            not ('*' in current_app.config[allowed_setting] or
-                 set(current_app.config[allowed_setting]).intersection(set(groups))))
+    return (current_app.config['AUTH_REQUIRED']
+            and not ('*' in current_app.config[allowed_setting]
+                     or set(current_app.config[allowed_setting]).intersection(set(groups))))
 
 
 def get_customers(login: str, groups: List[str]) -> List[str]:
@@ -48,7 +47,7 @@ def get_customers(login: str, groups: List[str]) -> List[str]:
 
 
 def create_token(user_id: str, name: str, login: str, provider: str, customers: List[str], scopes: List[str],
-                 email: str=None, email_verified: bool=None, picture: str=None, **kwargs) -> 'Jwt':
+                 email: str = None, email_verified: bool = None, picture: str = None, **kwargs) -> 'Jwt':
     now = datetime.utcnow()
     return Jwt(
         iss=request.url_root,
@@ -101,12 +100,12 @@ def send_password_reset(user: 'User', token: str) -> None:
     mailer.send_email(user.email, subject, body=text)
 
 
-def generate_email_token(email: str, salt: str=None) -> str:
+def generate_email_token(email: str, salt: str = None) -> str:
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     return cast(str, serializer.dumps(email, salt))
 
 
-def confirm_email_token(token: str, salt: str=None, expiration: int=900) -> str:
+def confirm_email_token(token: str, salt: str = None, expiration: int = 900) -> str:
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
         email = serializer.loads(

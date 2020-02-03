@@ -1,4 +1,3 @@
-
 import json
 import unittest
 from datetime import datetime
@@ -509,7 +508,7 @@ class AlertsTestCase(unittest.TestCase):
         response = self.client.get('/alert/' + alert_id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEqual(data['alert']['tags'], ['foo', 'bar'])
+        self.assertEqual(sorted(data['alert']['tags']), ['bar', 'foo'])
 
         # duplicate tag is a no-op
         response = self.client.put('/alert/' + alert_id + '/tag',
@@ -518,7 +517,7 @@ class AlertsTestCase(unittest.TestCase):
         response = self.client.get('/alert/' + alert_id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEqual(data['alert']['tags'], ['foo', 'bar'])
+        self.assertEqual(sorted(data['alert']['tags']), ['bar', 'foo'])
 
         # delete tag
         response = self.client.put('/alert/' + alert_id + '/untag',
@@ -709,8 +708,8 @@ class AlertsTestCase(unittest.TestCase):
         response = self.client.get('/alerts?q=event:node_up')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEquals(data['total'], 1)
-        self.assertEquals(data['alerts'][0]['event'], 'node_up')
+        self.assertEqual(data['total'], 1)
+        self.assertEqual(data['alerts'][0]['event'], 'node_up')
 
     def test_get_body(self):
         from flask import g

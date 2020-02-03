@@ -29,5 +29,8 @@ install:
   - pip install .
 
 script:
+  - pip install coveralls
   - python -m mypy alerta/
-  - nosetests --verbosity=3 tests/*
+  - pre-commit run -a
+  - pytest --cov=alerta
+  - coveralls

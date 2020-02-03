@@ -1,5 +1,5 @@
-
 import sys
+
 import ldap
 from flask import current_app, jsonify, request
 from flask_cors import cross_origin
@@ -16,6 +16,10 @@ from . import auth
 @auth.route('/auth/login', methods=['OPTIONS', 'POST'])
 @cross_origin(supports_credentials=True)
 def login():
+    # Allow LDAP server to use a self signed certificate
+    if current_app.config['LDAP_ALLOW_SELF_SIGNED_CERT']:
+        ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_ALLOW)
+
     # Retrieve required fields from client request
     try:
         login = request.json.get('username', None) or request.json['email']
@@ -27,7 +31,7 @@ def login():
         domain, username = login.split('\\')
         email = ''
         email_verified = False
-    else: 
+    else:
         username, domain = login.split('@')
         email = login
         email_verified = True
@@ -51,10 +55,10 @@ def login():
     # Get email address from LDAP
     if not email_verified:
         try:
-            ldap_result = ldap_connection.search_s(userdn, ldap.SCOPE_SUBTREE,'(objectClass=*)',['mail'])
+            ldap_result = ldap_connection.search_s(userdn, ldap.SCOPE_SUBTREE, '(objectClass=*)', ['mail'])
             email = ldap_result[0][1]['mail'][0].decode(sys.stdout.encoding)
             email_verified = True
-        except:
+        except Exception:
             email = '{}@{}'.format(username, domain)
 
     # Create user if not yet there

@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
@@ -193,11 +192,11 @@ class Blackout:
 
     # get a blackout
     @staticmethod
-    def find_by_id(id: str, customers: List[str]=None) -> Optional['Blackout']:
+    def find_by_id(id: str, customers: List[str] = None) -> Optional['Blackout']:
         return Blackout.from_db(db.get_blackout(id, customers))
 
     @staticmethod
-    def find_all(query: Query=None) -> List['Blackout']:
+    def find_all(query: Query = None) -> List['Blackout']:
         return [Blackout.from_db(blackout) for blackout in db.get_blackouts(query)]
 
     def update(self, **kwargs) -> 'Blackout':

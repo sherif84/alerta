@@ -1,4 +1,3 @@
-
 import json
 import unittest
 from io import BytesIO
@@ -825,14 +824,21 @@ class WebhooksTestCase(unittest.TestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['status'], 'ok')
 
+        # command=/ack with bogus telegram_alert_id
+        response = self.client.post('/webhooks/telegram', data=self.telegram_ack %
+                                    'bogus-id-this-shouldnt-exist', headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertEqual(data['status'], 'error')
+
     def test_custom_webhook(self):
 
         # setup custom webhook
-        custom_webhooks.webhooks['json'] = TestJsonWebhook()
-        custom_webhooks.webhooks['text'] = TestTextWebhook()
-        custom_webhooks.webhooks['form'] = TestFormWebhook()
-        custom_webhooks.webhooks['multipart'] = TestMultiPartFormWebhook()
-        custom_webhooks.webhooks['userdefined'] = TestUserDefinedWebhook()
+        custom_webhooks.webhooks['json'] = DummyJsonWebhook()
+        custom_webhooks.webhooks['text'] = DummyTextWebhook()
+        custom_webhooks.webhooks['form'] = DummyFormWebhook()
+        custom_webhooks.webhooks['multipart'] = DummyMultiPartFormWebhook()
+        custom_webhooks.webhooks['userdefined'] = DummyUserDefinedWebhook()
 
         # test json payload
         response = self.client.post('/webhooks/json?foo=bar', json={'baz': 'quux'}, content_type='application/json')
@@ -878,7 +884,7 @@ class WebhooksTestCase(unittest.TestCase):
         self.assertEqual(data['teapot'], True)
 
 
-class TestJsonWebhook(WebhookBase):
+class DummyJsonWebhook(WebhookBase):
 
     def incoming(self, query_string, payload):
         return Alert(
@@ -889,7 +895,7 @@ class TestJsonWebhook(WebhookBase):
         )
 
 
-class TestTextWebhook(WebhookBase):
+class DummyTextWebhook(WebhookBase):
 
     def incoming(self, query_string, payload):
         return Alert(
@@ -900,7 +906,7 @@ class TestTextWebhook(WebhookBase):
         )
 
 
-class TestFormWebhook(WebhookBase):
+class DummyFormWebhook(WebhookBase):
 
     def incoming(self, query_string, payload):
         return Alert(
@@ -911,7 +917,7 @@ class TestFormWebhook(WebhookBase):
         )
 
 
-class TestMultiPartFormWebhook(WebhookBase):
+class DummyMultiPartFormWebhook(WebhookBase):
 
     def incoming(self, query_string, payload):
         return Alert(
@@ -922,7 +928,7 @@ class TestMultiPartFormWebhook(WebhookBase):
         )
 
 
-class TestUserDefinedWebhook(WebhookBase):
+class DummyUserDefinedWebhook(WebhookBase):
 
     def incoming(self, query_string, payload):
         return jsonify(

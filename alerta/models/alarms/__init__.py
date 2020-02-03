@@ -13,9 +13,11 @@ def load_alarm_model(model):
 
 
 class AlarmModel(Base):
+    name = None
 
     Severity = {}  # type: ignore
     Colors = {}  # type: ignore
+    Status = {}  # type: ignore
 
     DEFAULT_STATUS = None  # type: str
     DEFAULT_NORMAL_SEVERITY = None  # type: str
@@ -30,10 +32,7 @@ class AlarmModel(Base):
     def init_app(self, app):
         cls = load_alarm_model(app.config['ALARM_MODEL'])
         self.__class__ = type('AlarmModelImpl', (cls.StateMachine, AlarmModel), {})
-        try:
-            self.register(app)
-        except Exception as e:
-            app.logger.warning(e)
+        self.register(app)
 
     def register(self, app):
         raise NotImplementedError

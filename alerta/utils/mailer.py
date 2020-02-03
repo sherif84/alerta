@@ -1,4 +1,3 @@
-
 from flask import Flask, current_app
 
 try:
@@ -15,7 +14,7 @@ except ImportError:
 
 class Mailer:
 
-    def __init__(self, app: Flask=None) -> None:
+    def __init__(self, app: Flask = None) -> None:
         self.app = None
         if app is not None:
             self.register(app)
@@ -29,7 +28,7 @@ class Mailer:
         self.ssl_cert_file = app.config['SSL_CERT_FILE']
 
         self.mail_from = app.config['MAIL_FROM']
-        self.smtp_username = app.config.get('SMTP_USERNAME', self.mail_from)
+        self.smtp_username = app.config.get('SMTP_USERNAME') or self.mail_from
         self.smtp_password = app.config['SMTP_PASSWORD']
 
         self.smtp_use_ssl = app.config['SMTP_USE_SSL']
@@ -73,7 +72,7 @@ class Mailer:
 
         except smtplib.SMTPException as e:
             current_app.logger.error('Failed to send email : %s', str(e))
-        except (socket.error, socket.herror, socket.gaierror) as e:
+        except (OSError, socket.herror, socket.gaierror) as e:
             current_app.logger.error('Mail server connection error: %s', str(e))
             return
         except Exception as e:

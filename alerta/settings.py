@@ -60,6 +60,7 @@ AUTH_REQUIRED = False
 AUTH_PROVIDER = 'basic'  # basic (default), ldap, github, openid, saml2, azure, cognito, gitlab, google, keycloak
 ADMIN_USERS = []  # type: List[str]
 USER_DEFAULT_SCOPES = ['read', 'write']  # Note: 'write' scope implicitly includes 'read'
+GUEST_DEFAULT_SCOPES = ['read:alerts']
 CUSTOMER_VIEWS = False
 
 BASIC_AUTH_REALM = 'Alerta'
@@ -87,6 +88,7 @@ LDAP_URL = ''  # eg. ldap://localhost:389
 LDAP_DOMAINS = {}  # type: Dict[str, str]
 LDAP_DOMAINS_GROUP = {}  # type: Dict[str, str]
 LDAP_DOMAINS_BASEDN = {}  # type: Dict[str, str]
+LDAP_ALLOW_SELF_SIGNED_CERT = False
 
 # Microsoft Identity Platform (v2.0)
 AZURE_TENANT = 'common'  # "common", "organizations", "consumers" or tenant ID
@@ -99,6 +101,7 @@ ALLOWED_KEYCLOAK_ROLES = None
 # OpenID Connect
 OIDC_ISSUER_URL = None
 OIDC_AUTH_URL = None
+OIDC_LOGOUT_URL = None
 OIDC_VERIFY_TOKEN = False
 OIDC_ROLE_CLAIM = OIDC_CUSTOM_CLAIM = 'roles'  # JWT claim name whose value is used in role mapping
 OIDC_GROUP_CLAIM = 'groups'  # JWT claim name whose value is used in customer mapping
@@ -118,6 +121,7 @@ API_KEY_EXPIRE_DAYS = 365  # 1 year
 # Audit Log
 AUDIT_TRAIL = ['admin']  # possible categories are 'admin', 'write', and 'auth'
 AUDIT_LOG = None  # set to True to log to application logger
+AUDIT_LOG_REDACT = True  # redact sensitive data before logging
 AUDIT_URL = None  # send audit log events via webhook URL
 
 # CORS settings
@@ -138,9 +142,10 @@ DEFAULT_PREVIOUS_SEVERITY = None
 COLOR_MAP = {}  # type: Dict[str, Any]
 
 # Timeout settings
-DEFAULT_TIMEOUT = 86400
+DEFAULT_TIMEOUT = 86400  # seconds
 ALERT_TIMEOUT = DEFAULT_TIMEOUT
 HEARTBEAT_TIMEOUT = DEFAULT_TIMEOUT
+HEARTBEAT_MAX_LATENCY = 2000  # ms
 
 # Housekeeping settings
 DEFAULT_EXPIRED_DELETE_HRS = 2  # hours (0 hours = do not delete)
@@ -151,7 +156,7 @@ EMAIL_VERIFICATION = False
 SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 587
 MAIL_LOCALHOST = 'localhost'  # mail server to use in HELO/EHLO command
-SMTP_STARTTLS = False
+SMTP_STARTTLS = True
 SMTP_USE_SSL = False
 SSL_KEY_FILE = None
 SSL_CERT_FILE = None
@@ -161,15 +166,16 @@ SMTP_PASSWORD = ''  # password for MAIL_FROM (or SMTP_USERNAME if used)
 
 # Web console settings
 SITE_LOGO_URL = ''  # URL to company logo
+DATE_FORMAT_LONG_DATE = 'ddd D MMM, YYYY HH:mm:ss.SSS Z'  # eg. Tue 9 Oct, 2018 09:24.036 +02:00
+DATE_FORMAT_MEDIUM_DATE = 'ddd D MMM HH:mm'  # eg. Tue 9 Oct 09:24
 DATE_FORMAT_SHORT_TIME = 'HH:mm'  # eg. 09:24
-DATE_FORMAT_MEDIUM_DATE = 'EEE d MMM HH:mm'  # eg. Tue 9 Oct 09:24
-DATE_FORMAT_LONG_DATE = 'd/M/yyyy h:mm:ss.sss a'  # eg. 9/10/2018 9:24:03.036 AM
 DEFAULT_AUDIO_FILE = None  # must exist on client at relative path eg. '/audio/alert_high-intensity.ogg' or URL
 COLUMNS = [
     'severity', 'status', 'lastReceiveTime', 'timeoutLeft', 'duplicateCount',
     'customer', 'environment', 'service', 'resource', 'event', 'value'
 ]
 SORT_LIST_BY = 'lastReceiveTime'  # newest='lastReceiveTime' or oldest='-createTime' (Note: minus means reverse)
+DEFAULT_FILTER = {'status': ['open', 'ack']}
 
 # Alert Status Indicators
 ASI_SEVERITY = [

@@ -9,7 +9,7 @@ from psycopg2.extras import Json, NamedTupleCursor, register_composite
 
 from alerta.database.base import Database
 from alerta.exceptions import NoCustomerMatch
-from alerta.models.enums import Scope
+from alerta.models.enums import ADMIN_SCOPES
 from alerta.utils.format import DateTime
 from alerta.utils.response import absolute_url
 
@@ -423,6 +423,14 @@ class Backend(Database):
 
     def get_history(self, query=None, page=None, page_size=None):
         query = query or Query()
+        if 'id' in query.vars:
+            select = """
+                SELECT a.id
+                  FROM alerts a, unnest(history[1:{limit}]) h
+                 WHERE h.id LIKE %(id)s
+            """.format(limit=current_app.config['HISTORY_LIMIT'])
+            query.vars['id'] = self._fetchone(select, query.vars)
+
         select = """
             SELECT resource, environment, service, "group", tags, attributes, origin, customer, history, h.*
               FROM alerts, unnest(history[1:{limit}]) h
@@ -768,10 +776,10 @@ class Backend(Database):
 
     def upsert_heartbeat(self, heartbeat):
         upsert = """
-            INSERT INTO heartbeats (id, origin, tags, type, create_time, timeout, receive_time, customer)
-            VALUES (%(id)s, %(origin)s, %(tags)s, %(event_type)s, %(create_time)s, %(timeout)s, %(receive_time)s, %(customer)s)
+            INSERT INTO heartbeats (id, origin, tags, attributes, type, create_time, timeout, receive_time, customer)
+            VALUES (%(id)s, %(origin)s, %(tags)s, %(attributes)s, %(event_type)s, %(create_time)s, %(timeout)s, %(receive_time)s, %(customer)s)
             ON CONFLICT (origin, COALESCE(customer, '')) DO UPDATE
-                SET tags=%(tags)s, create_time=%(create_time)s, timeout=%(timeout)s, receive_time=%(receive_time)s
+                SET tags=%(tags)s, attributes=%(attributes)s, create_time=%(create_time)s, timeout=%(timeout)s, receive_time=%(receive_time)s
             RETURNING *
         """
         return self._upsert(upsert, vars(heartbeat))
@@ -831,6 +839,8 @@ class Backend(Database):
             UPDATE keys
             SET
         """
+        if 'user' in kwargs:
+            update += '"user"=%(user)s, '
         if 'scopes' in kwargs:
             update += 'scopes=%(scopes)s, '
         if 'text' in kwargs:
@@ -1096,12 +1106,16 @@ class Backend(Database):
 
     def get_scopes_by_match(self, login, matches):
         if login in current_app.config['ADMIN_USERS']:
-            return [Scope.admin, Scope.read, Scope.write]
+            return ADMIN_SCOPES
 
         scopes = list()
         for match in matches:
+            if match == 'admin':
+                return ADMIN_SCOPES
             if match == 'user':
                 scopes.extend(current_app.config['USER_DEFAULT_SCOPES'])
+            if match == 'guest':
+                scopes.extend(current_app.config['GUEST_DEFAULT_SCOPES'])
             select = """SELECT scopes FROM perms WHERE match=%s"""
             response = self._fetchone(select, (match,))
             if response:

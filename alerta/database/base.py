@@ -1,4 +1,3 @@
-
 from importlib import import_module
 from typing import NamedTuple
 from urllib.parse import urlparse
@@ -18,6 +17,8 @@ def get_backend(app):
     db_uri = app.config['DATABASE_URL']
     backend = urlparse(db_uri).scheme
 
+    if backend.startswith('mongodb'):
+        backend = 'mongodb'
     if backend == 'postgresql':
         backend = 'postgres'
     return backend

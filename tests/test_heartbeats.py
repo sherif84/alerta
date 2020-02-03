@@ -1,4 +1,3 @@
-
 import json
 import unittest
 from uuid import uuid4
@@ -47,13 +46,13 @@ class HeartbeatsTestCase(unittest.TestCase):
         response = self.client.post('/heartbeat', data=json.dumps(self.heartbeat), headers=self.headers)
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEquals(heartbeat_id, data['heartbeat']['id'])
+        self.assertEqual(heartbeat_id, data['heartbeat']['id'])
 
         # get heartbeat
         response = self.client.get('/heartbeat/' + heartbeat_id)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEquals(heartbeat_id, data['heartbeat']['id'])
+        self.assertEqual(heartbeat_id, data['heartbeat']['id'])
 
         # delete heartbeat
         response = self.client.delete('/heartbeat/' + heartbeat_id)

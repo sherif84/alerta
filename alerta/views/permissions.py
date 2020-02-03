@@ -1,4 +1,3 @@
-
 from flask import current_app, g, jsonify, request
 from flask_cors import cross_origin
 
@@ -23,7 +22,7 @@ def create_perm():
     except ValueError as e:
         raise ApiError(str(e), 400)
 
-    if perm.match in ['admin', 'user']:
+    if perm.match in ['admin', 'user', 'guest']:
         raise ApiError('{} role already exists'.format(perm.match), 409)
 
     for want_scope in perm.scopes:
@@ -42,7 +41,7 @@ def create_perm():
     if perm:
         return jsonify(status='ok', id=perm.id, permission=perm.serialize), 201
     else:
-        raise ApiError('create API key failed', 500)
+        raise ApiError('create permission failed', 500)
 
 
 @api.route('/perm/<perm_id>', methods=['OPTIONS', 'GET'])
@@ -74,17 +73,24 @@ def list_perms():
         match='user',
         scopes=current_app.config['USER_DEFAULT_SCOPES']
     )
+    guest_perm = Permission(
+        match='guest',
+        scopes=current_app.config['GUEST_DEFAULT_SCOPES']
+    )
 
-    # add system-defined roles 'admin' and 'user'
+    # add system-defined roles 'admin', 'user' and 'guest
     if 'scopes' in request.args:
         want_scopes = request.args.getlist('scopes')
         if set(admin_perm.scopes) & set(want_scopes):
             perms.append(admin_perm)
         if set(user_perm.scopes) & set(want_scopes):
             perms.append(user_perm)
+        if set(guest_perm.scopes) & set(want_scopes):
+            perms.append(guest_perm)
     else:
         perms.append(admin_perm)
         perms.append(user_perm)
+        perms.append(guest_perm)
 
     if perms:
         return jsonify(
@@ -108,6 +114,10 @@ def list_perms():
 def update_perm(perm_id):
     if not request.json:
         raise ApiError('nothing to change', 400)
+
+    for s in request.json.get('scopes', []):
+        if s not in list(Scope):
+            raise ApiError("'{}' is not a valid Scope".format(s), 400)
 
     perm = Permission.find_by_id(perm_id)
 

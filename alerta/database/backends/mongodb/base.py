@@ -7,7 +7,7 @@ from pymongo.errors import ConnectionFailure
 
 from alerta.database.base import Database
 from alerta.exceptions import NoCustomerMatch
-from alerta.models.enums import Scope
+from alerta.models.enums import ADMIN_SCOPES
 
 from .utils import Query
 
@@ -638,7 +638,7 @@ class Backend(Database):
             {'$limit': topn}
         ]
 
-        responses = self.get_db().alerts.aggregate(pipeline)
+        responses = self.get_db().alerts.aggregate(pipeline, allowDiskUse=True)
 
         top = list()
         for response in responses:
@@ -675,7 +675,7 @@ class Backend(Database):
             {'$limit': topn}
         ]
 
-        responses = self.get_db().alerts.aggregate(pipeline)
+        responses = self.get_db().alerts.aggregate(pipeline, allowDiskUse=True)
 
         top = list()
         for response in responses:
@@ -711,7 +711,7 @@ class Backend(Database):
             {'$limit': topn}
         ]
 
-        responses = self.get_db().alerts.aggregate(pipeline)
+        responses = self.get_db().alerts.aggregate(pipeline, allowDiskUse=True)
         top = list()
         for response in responses:
             top.append(
@@ -1154,6 +1154,7 @@ class Backend(Database):
                 '$set': {
                     'origin': heartbeat.origin,
                     'tags': heartbeat.tags,
+                    'attributes': heartbeat.attributes,
                     'type': heartbeat.event_type,
                     'createTime': heartbeat.create_time,
                     'timeout': heartbeat.timeout,
@@ -1435,12 +1436,16 @@ class Backend(Database):
 
     def get_scopes_by_match(self, login, matches):
         if login in current_app.config['ADMIN_USERS']:
-            return [Scope.admin, Scope.read, Scope.write]
+            return ADMIN_SCOPES
 
         scopes = list()
         for match in matches:
+            if match == 'admin':
+                return ADMIN_SCOPES
             if match == 'user':
                 scopes.extend(current_app.config['USER_DEFAULT_SCOPES'])
+            if match == 'guest':
+                scopes.extend(current_app.config['GUEST_DEFAULT_SCOPES'])
             response = self.get_db().perms.find_one({'match': match}, projection={'scopes': 1, '_id': 0})
             if response:
                 scopes.extend(response['scopes'])
@@ -1569,12 +1574,12 @@ class Backend(Database):
 
         if expired_threshold:
             expired_hours_ago = datetime.utcnow() - timedelta(hours=expired_threshold)
-            self.get_db().alerts.remove(
+            self.get_db().alerts.delete_many(
                 {'status': {'$in': ['closed', 'expired']}, 'lastReceiveTime': {'$lt': expired_hours_ago}})
 
         if info_threshold:
             info_hours_ago = datetime.utcnow() - timedelta(hours=info_threshold)
-            self.get_db().alerts.remove({'severity': 'informational', 'lastReceiveTime': {'$lt': info_hours_ago}})
+            self.get_db().alerts.delete_many({'severity': 'informational', 'lastReceiveTime': {'$lt': info_hours_ago}})
 
         # get list of alerts to be newly expired
         pipeline = [

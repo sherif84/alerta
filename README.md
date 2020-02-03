@@ -3,6 +3,7 @@ Alerta Release 7.0
 
 [![Build Status](https://travis-ci.org/alerta/alerta.png)](https://travis-ci.org/alerta/alerta)
 [![Gitter chat](https://badges.gitter.im/alerta/chat.png)](https://gitter.im/alerta/chat)
+[![Coverage Status](https://coveralls.io/repos/github/alerta/alerta/badge.svg?branch=master)](https://coveralls.io/github/alerta/alerta?branch=master)
 
 The Alerta monitoring tool was developed with the following aims in mind:
 
@@ -117,7 +118,7 @@ To run the tests using a local Postgres database run:
     $ pip install -r requirements.txt
     $ pip install -e .[postgres]
     $ createdb test5
-    $ ALERTA_SVR_CONF_FILE= DATABASE_URL=postgres:///test5 nosetests
+    $ ALERTA_SVR_CONF_FILE= DATABASE_URL=postgres:///test5 pytest
 
 Cloud Deployment
 ----------------
